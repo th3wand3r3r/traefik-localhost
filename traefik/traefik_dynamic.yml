@@ -1,0 +1,11 @@
+http:
+  middlewares:
+    simpleAuth:
+      basicAuth:
+        users: ["admin:password"]
+  routers:
+    api:
+      rule: "Host(`tr.localhost`)"
+      entrypoints: ["web"]
+      middlewares: [""]
+      service: "api@internal"
