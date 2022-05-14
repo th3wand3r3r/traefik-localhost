@@ -1,29 +1,40 @@
-# treafik-localhost
+# traefik-localhost
 
-Simple localhost setup with treafik and extras
+A simple setup to get started with traefik for local use with SSL
 
+## Traefik
+
+Traefik Proxy Documentation: https://doc.traefik.io/traefik/
+
+To download/update the ssl certificates run the updatessl.sh script, the certificates will expire every 60 days
+
+More information on Traefik.me see https://traefik.me
 
 ## URLs
-|Docker          |URLs                 |
-|----------------|---------------------|
-|Traefik         |`http://tr.localhost`|
-|Grafana         |`http://gr.localhost`|
-|Jaeger          |`http://j.localhost` |
-|Prometheus      |`http://pr.localhost`|
-|Portainer       |`http://p.localhost` |
+|Docker          | URLs                    |
+|----------------|-------------------------|
+|Traefik         | `https://lb.traefik.me` |
+|Grafana         | `https://gr.traefik.me` |
+|Jaeger          | `https://ja.traefik.me` |
+|Prometheus      | `https://pr.traefik.me` |
+|Portainer       | `https://po.traefik.me` |
 
 ## First Time Setup
 Create a docker network called proxy: `docker network create proxy`
+
+Download the SSL certificates by running `./updatessl.sh`
 
 To bring up: `docker-compose up -d`
 
 To take down: `docker-compose down`
 
-#### Portainer
-Portainer will require you to setup up, go to `http://p.localhost` to begin setup
+### Portainer
+Portainer will require setup, go to `https://po.traefik.me` to begin
 
-#### Grafana
-admin / password
+### Grafana
+Default Login information: admin / password
+Password can be changed in `grafana/config.monitoring`
+
 # Config
 To attach addition containers to use Traefik include the container on the proxy network.
 Also include:
@@ -36,13 +47,14 @@ networks:
   proxy:
     external: true
 ```
-include labels for the container to attach to Traefik, replace dem:
+include labels for the container to attach to Traefik, replace demo:
 ```
     labels:
       traefik.enable: true
-      traefik.http.routers.dem.rule: Host(`dem.localhost`)
-      traefik.http.routers.dem.entrypoints: web
-      traefik.http.routers.dem.service: dem
-      traefik.http.services.dem.loadbalancer.server.port: 3000
+      traefik.http.routers.demo.rule: Host(`demo.traefik.me`)
+      traefik.http.routers.demo.entrypoints: web, websecure
+      traefik.http.routers.demo.tls: true
+      traefik.http.routers.demo.service: demo
+      traefik.http.services.demo.loadbalancer.server.port: 3000
 ```
-see docker-compose.yml for use
+Check docker-compose.yml for use

@@ -1,20 +1,29 @@
-version: '3.2'
+version: '3.9'
 
 services:
 
   # Load Balancer, reduces the exposed Host ports
   traefik:
-    image: traefik:v2.5
+    image: traefik
     container_name: traefik
     ports:
       - 80:80
+      - 443:443
+    #  - 3306
     volumes:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml
       - ./traefik/traefik_dynamic.yml:/traefik_dynamic.yml
+      - ./traefik/ssl:/ssl
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: unless-stopped
+    restart: always
     networks:
-      - proxy
+      proxy:
+        aliases:
+          - lb.traefik.me
+          - po.traefik.me
+          - ja.traefik.me
+          - pr.traefik.me
+          - gr.traefik.me
 
   # A Web GUI for docker
   portainer:
@@ -25,13 +34,15 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       traefik.enable: true
-      traefik.http.routers.portainer.rule: Host(`p.localhost`)
-      traefik.http.routers.portainer.entrypoints: web
+      traefik.http.routers.portainer.rule: Host(`po.traefik.me`)
+      traefik.http.routers.portainer.entrypoints: web, websecure
+      traefik.http.routers.portainer.middlewares: secureHeaders@file
+      traefik.http.routers.portainer.tls: true
       traefik.http.routers.portainer.service: portainer
       traefik.http.services.portainer.loadbalancer.server.port: 9000
     restart: unless-stopped
     networks:
-      - proxy
+      proxy:
 
   # Tracing
   jaeger:
@@ -41,13 +52,15 @@ services:
       COLLECTOR_ZIPKIN_HTTP_PORT: 9411
     labels:
       traefik.enable: true
-      traefik.http.routers.jaeger.rule: Host(`j.localhost`)
-      traefik.http.routers.jaeger.entrypoints: web
+      traefik.http.routers.jaeger.rule: Host(`ja.traefik.me`)
+      traefik.http.routers.jaeger.entrypoints: web, websecure
+      traefik.http.routers.jaeger.middlewares: secureHeaders@file
+      traefik.http.routers.jaeger.tls: true
       traefik.http.routers.jaeger.service: jaeger
       traefik.http.services.jaeger.loadbalancer.server.port: 16686
     restart: unless-stopped
     networks:
-      - proxy
+      proxy:
 
   # Monitoring
   prometheus:
@@ -63,13 +76,15 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     labels:
       traefik.enable: true
-      traefik.http.routers.prometheus.rule: Host(`pr.localhost`)
-      traefik.http.routers.prometheus.entrypoints: web
+      traefik.http.routers.prometheus.rule: Host(`pr.traefik.me`)
+      traefik.http.routers.prometheus.entrypoints: web, websecure
+      traefik.http.routers.prometheus.middlewares: secureHeaders@file
+      traefik.http.routers.prometheus.tls: true
       traefik.http.routers.prometheus.service: prometheus
       traefik.http.services.prometheus.loadbalancer.server.port: 9090
     restart: unless-stopped
     networks:
-      - proxy
+      proxy:
 
   # Stats Dashboard
   grafana:
@@ -84,13 +99,15 @@ services:
       - ./grafana/config.monitoring
     labels:
       traefik.enable: true
-      traefik.http.routers.grafana.rule: Host(`gr.localhost`)
-      traefik.http.routers.grafana.entrypoints: web
+      traefik.http.routers.grafana.rule: Host(`gr.traefik.me`)
+      traefik.http.routers.grafana.entrypoints: web, websecure
+      traefik.http.routers.grafana.middlewares: secureHeaders@file
+      traefik.http.routers.grafana.tls: true
       traefik.http.routers.grafana.service: grafana
       traefik.http.services.grafana.loadbalancer.server.port: 3000
     restart: unless-stopped
     networks:
-      - proxy
+      proxy:
 
 volumes:
   portainer:
